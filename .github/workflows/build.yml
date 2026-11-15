@@ -1,0 +1,29 @@
+name: Build APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descompactar projeto
+        run: unzip -q FortniteAFKMonitor.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
+      - name: Gerar APK
+        working-directory: FortniteAFKMonitor
+        run: gradle assembleDebug --no-daemon
+      - name: Publicar APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "apk-${{ github.run_number }}" FortniteAFKMonitor/app/build/outputs/apk/debug/app-debug.apk --repo "${{ github.repository }}" --title "APK ${{ github.run_number }}" --notes "Fortnite AFK Monitor"
